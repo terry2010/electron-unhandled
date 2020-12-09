@@ -53,8 +53,13 @@ const handleError = (title, error) => {
 				detail: cleanStack(error.stack, {pretty: true})
 			});
 
+			if (buttonIndex === 0) {
+				options.reportButton(error);
+			}
+
 			if (buttonIndex === 1) {
 				clipboard.writeText(`${title}\n${stack}`);
+				options.reportButton(error);
 			}
 
 			if (buttonIndex === 2) {
