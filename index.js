@@ -36,11 +36,11 @@ const handleError = (title, error) => {
 		if (app.isReady()) {
 			const buttons = [
 				'OK',
-				process.platform === 'darwin' ? 'Copy Error' : 'Copy error'
+				process.platform === 'darwin' ? '复制信息' : '复制信息'
 			];
 
 			if (options.reportButton) {
-				buttons.push('Report…');
+				buttons.push('自动上报');
 			}
 
 			// Intentionally not using the `title` option as it's not shown on macOS
