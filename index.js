@@ -9,6 +9,8 @@ const app = electron.app || electron.remote.app;
 const dialog = electron.dialog || electron.remote.dialog;
 const clipboard = electron.clipboard || electron.remote.clipboard;
 const appName = 'name' in app ? app.name : app.getName();
+const http = require('http');
+
 
 // The dialog.showMessageBox method has been split into a sync and an async variant in Electron 6.0.0
 const showMessageBox = dialog.showMessageBoxSync || dialog.showMessageBox;
@@ -17,7 +19,10 @@ let installed = false;
 
 let options = {
 	logger: console.error,
-	showDialog: !isDev
+	showDialog: !isDev,
+	autoReport:!isDev,
+	autoReportServer:http.RequestOptions,
+	autoReportData:null
 };
 
 const handleError = (title, error) => {
@@ -30,13 +35,32 @@ const handleError = (title, error) => {
 		return;
 	}
 
+	if (options.autoReport) {
+		let req = http.request(options.autoReportServer, function (res) {
+			console.log('auto-STATUS: ' + res.statusCode);
+			console.log('auto-HEADERS: ' + JSON.stringify(res.headers));
+			res.setEncoding('utf8');
+			res.on('data', function (chunk) {
+				console.log('BODY: ' + chunk);
+			});
+		});
+
+		req.on('error', function (e) {
+			console.log('auto-problem with request: ' + e.message);
+		});
+		var data = options.autoReportData(error)
+		req.write(data);
+		req.end();
+	}
+
 	if (options.showDialog) {
 		const stack = cleanStack(error.stack);
 
 		if (app.isReady()) {
+
 			const buttons = [
 				'OK',
-				process.platform === 'darwin' ? '复制信息' : '复制信息'
+				process.platform === 'darwin' ? '复制数据' : '复制信息'
 			];
 
 			if (options.reportButton) {
@@ -53,13 +77,8 @@ const handleError = (title, error) => {
 				detail: cleanStack(error.stack, {pretty: true})
 			});
 
-			if (buttonIndex === 0) {
-				options.reportButton(error);
-			}
-
 			if (buttonIndex === 1) {
 				clipboard.writeText(`${title}\n${stack}`);
-				options.reportButton(error);
 			}
 
 			if (buttonIndex === 2) {
