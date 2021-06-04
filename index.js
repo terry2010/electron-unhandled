@@ -10,6 +10,7 @@ const dialog = electron.dialog || electron.remote.dialog;
 const clipboard = electron.clipboard || electron.remote.clipboard;
 const appName = 'name' in app ? app.name : app.getName();
 const http = require('http');
+const {spawn} = require('child_process')
 
 
 // The dialog.showMessageBox method has been split into a sync and an async variant in Electron 6.0.0
@@ -83,6 +84,14 @@ const handleError = (title, error) => {
 
 			if (buttonIndex === 2) {
 				options.reportButton(error);
+			}
+			if (process.platform != 'darwin') {
+				console.log("forceCleanLeadThreads.....")
+				let exeName = "新浪口袋.exe"
+				if (app.getPath('exe').indexOf('electron.exe') > 10) {
+					exeName = "electron.exe"
+				}
+				spawn("taskkill", ["/f", "/im", exeName])
 			}
 		} else {
 			dialog.showErrorBox(title, stack);
